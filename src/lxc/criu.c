@@ -212,6 +212,10 @@ static void exec_criu(struct criu_opts *opts)
 	if (opts->user->action_script)
 		static_args += 2;
 
+	// For 2*"--irmap-scan-path=<path>"
+	if (strcmp(opts->action, "dump") == 0 || strcmp(opts->action, "pre-dump") == 0)
+		static_args += 4;
+
 	static_args += 2 * lxc_list_len(&opts->c->lxc_conf->mount_list);
 
 	ret = snprintf(log, PATH_MAX, "%s/%s.log", opts->user->directory, opts->action);
@@ -260,6 +264,13 @@ static void exec_criu(struct criu_opts *opts)
 	DECLARE_ARG(opts->user->directory);
 	DECLARE_ARG("-o");
 	DECLARE_ARG(log);
+	
+	if (strcmp(opts->action, "dump") == 0 || strcmp(opts->action, "pre-dump") == 0) {
+		DECLARE_ARG("--irmap-scan-path");
+		DECLARE_ARG("/var/lib");
+		DECLARE_ARG("--irmap-scan-path");
+		DECLARE_ARG("/var");
+	}
 
 	for (i = 0; i < cgroup_num_hierarchies(); i++) {
 		char **controllers = NULL, *fullname;
